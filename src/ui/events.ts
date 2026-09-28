@@ -11,14 +11,14 @@ import {
   importProjectJson,
   listProjects,
 } from "../core/projectActions";
-import { convertChords, parseChordName } from "../core/chords";
+import { convertChords, parseChordName, getCanonicalVoicings } from "../core/chords";
 import {
   convertChordsUI,
   getCurrentProgressionNotes,
   toggleIntervalMode,
 } from "./chordCards";
 import { showToast } from "./toast";
-import { trackerStore } from "./trackerStore";
+import { trackerStore, type StepLoadInput } from "./trackerStore";
 
 // ─── Voicing select ─────────────────────────────────────────────────
 export const getSelectedVoicing = (): string => "closed";
@@ -53,6 +53,28 @@ export const loadSetsData = (sets: string[]) => {
   renderStepStrip();
 
   document.getElementById("convertChordsBtn")?.click();
+};
+
+export const loadStepsData = (steps: (string | StepLoadInput)[]) => {
+  trackerStore.loadStepsData(steps);
+
+  const input = document.getElementById("chordsInput") as HTMLInputElement;
+  if (input) input.value = trackerStore.getActiveSet();
+
+  updateSingleChordDropdownFromInput();
+  renderStepStrip();
+
+  document.getElementById("convertChordsBtn")?.click();
+};
+
+/**
+ * Maps a per-chord voicing token from a shared link (a canonical voicing id, e.g.
+ * "inv1", or "-" for unset) to its CANONICAL_VOICINGS index. Falls back to ROOT (0)
+ * for unrecognized tokens so a malformed link degrades gracefully.
+ */
+const voicingIndexFromToken = (token: string): number => {
+  const idx = getCanonicalVoicings().findIndex((v) => v.id === token.toLowerCase());
+  return idx === -1 ? 0 : idx;
 };
 
 export const renderStepStrip = (): void => {
@@ -473,8 +495,27 @@ export const wireEventListeners = (): void => {
         const parts = param.split(";");
         querySets.push(...parts);
       });
+
+      // Optional per-chord voicings: "v" mirrors "p"'s set/chord layout (";"
+      // between sets, whitespace between chords), with each chord token a
+      // canonical voicing id (root, inv1, inv2, inv3, drop2, spread, octave).
+      const vParams = params.getAll("v");
+      const voicingSets: string[] = [];
+      vParams.forEach((param) => {
+        voicingSets.push(...param.split(";"));
+      });
+
       if (querySets.length > 0 && querySets.some((s) => s.trim() !== "")) {
-        loadSetsData(querySets);
+        if (voicingSets.length > 0) {
+          const steps: (string | StepLoadInput)[] = querySets.map((chords, i) => {
+            const tokens = (voicingSets[i] || "").trim().split(/\s+/).filter(Boolean);
+            if (tokens.length === 0) return chords;
+            return { chords, voicings: tokens.map(voicingIndexFromToken) };
+          });
+          loadStepsData(steps);
+        } else {
+          loadSetsData(querySets);
+        }
       }
     }
   });

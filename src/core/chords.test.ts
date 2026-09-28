@@ -130,8 +130,8 @@ describe('chords module', () => {
   describe('canonical voicings', () => {
     const cmaj7 = [60, 64, 67, 71]; // C4, E4, G4, B4
 
-    it('exposes exactly 6 canonical voicings', () => {
-      expect(getCanonicalVoicings().length).toBe(6);
+    it('exposes exactly 7 canonical voicings', () => {
+      expect(getCanonicalVoicings().length).toBe(7);
       expect(CANONICAL_VOICINGS.map((v) => v.label)).toEqual([
         'ROOT',
         'INV 1',
@@ -139,6 +139,7 @@ describe('chords module', () => {
         'INV 3',
         'DROP 2',
         'SPREAD',
+        'OCTAVE',
       ]);
     });
 
@@ -167,9 +168,13 @@ describe('chords module', () => {
       expect(applyCanonicalVoicingByIndex(cmaj7, 5)).toEqual([48, 64, 67, 83]);
     });
 
+    it('applies OCTAVE by raising every note an octave', () => {
+      expect(applyCanonicalVoicingByIndex(cmaj7, 6)).toEqual([72, 76, 79, 83]);
+    });
+
     it('gracefully wraps negative and out-of-bound indices', () => {
-      expect(getCanonicalVoicingByIndex(-1).label).toBe('SPREAD');
-      expect(getCanonicalVoicingByIndex(6).label).toBe('ROOT');
+      expect(getCanonicalVoicingByIndex(-1).label).toBe('OCTAVE');
+      expect(getCanonicalVoicingByIndex(7).label).toBe('ROOT');
     });
   });
 });
