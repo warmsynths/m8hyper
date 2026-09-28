@@ -1,0 +1,38 @@
+name: Rebuild docs bundle
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "docs-build"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Commit rebuilt bundle
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "build(docs): rebuild production bundle [skip ci]"
+          file_pattern: 'docs/**'
