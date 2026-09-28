@@ -70,6 +70,7 @@ export const CANONICAL_VOICINGS: CanonicalVoicing[] = [
   { id: "inv3", label: "INV 3", fn: (n) => n.map((v, i) => (i <= 2 ? v + 12 : v)) },
   { id: "drop2", label: "DROP 2", fn: (n) => n.map((v, i) => (i === n.length - 2 ? v - 12 : v)) },
   { id: "spread", label: "SPREAD", fn: (n) => n.map((v, i) => (i === 0 ? v - 12 : i === n.length - 1 ? v + 12 : v)) },
+  { id: "octave", label: "OCTAVE", fn: (n) => n.map((v) => v + 12) },
 ];
 
 export const getCanonicalVoicings = (): CanonicalVoicing[] => CANONICAL_VOICINGS;

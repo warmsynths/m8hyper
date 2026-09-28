@@ -185,5 +185,25 @@ describe('events module', () => {
       const input = document.getElementById('chordsInput') as HTMLInputElement;
       expect(input.value).toBe('E Am');
     });
+
+    it('applies per-chord voicings from URL query parameter v alongside p', () => {
+      window.history.pushState({}, '', '?p=C%20Dm%20G7&v=root%20inv1%20octave');
+
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const { trackerStore } = require('./trackerStore');
+      const chords = trackerStore.getActiveStep().chords;
+      expect(chords.map((c: any) => c.voicingLabel)).toEqual(['ROOT', 'INV 1', 'OCTAVE']);
+    });
+
+    it('ignores unrecognized voicing tokens in v by falling back to ROOT', () => {
+      window.history.pushState({}, '', '?p=C%20Dm&v=bogus%20inv1');
+
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
+      const { trackerStore } = require('./trackerStore');
+      const chords = trackerStore.getActiveStep().chords;
+      expect(chords.map((c: any) => c.voicingLabel)).toEqual(['ROOT', 'INV 1']);
+    });
   });
 });
